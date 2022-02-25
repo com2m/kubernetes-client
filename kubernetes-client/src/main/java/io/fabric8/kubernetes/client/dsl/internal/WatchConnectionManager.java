@@ -91,7 +91,7 @@ public class WatchConnectionManager<T extends HasMetadata, L extends KubernetesR
   }
 
   public void waitUntilReady() {
-    Utils.waitUntilReadyOrFail(websocketFuture, 10, TimeUnit.SECONDS);
+    Utils.waitUntilReadyOrFail(websocketFuture, 10, TimeUnit.SECONDS, 10);
     this.websocket = websocketFuture.getNow(null);
   }
 

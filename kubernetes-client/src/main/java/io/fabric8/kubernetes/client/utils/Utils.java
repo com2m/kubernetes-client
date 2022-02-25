@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2015 Red Hat, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
+
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +65,7 @@ public class Utils {
   public static final String PATH_WINDOWS = "Path";
   public static final String PATH_UNIX = "PATH";
   private static final Random random = new Random();
-  
+
   private static final ExecutorService SHARED_POOL = Executors.newCachedThreadPool();
   private static final CachedSingleThreadScheduler SHARED_SCHEDULER = new CachedSingleThreadScheduler();
 
@@ -144,10 +146,10 @@ public class Utils {
   /**
    * Wait until an other thread signals the completion of a task.
    * If an exception is passed, it will be propagated to the caller.
-   * @param future    The communication channel.
-   * @param amount    The amount of time to wait.
-   * @param timeUnit  The time unit.
    *
+   * @param future   The communication channel.
+   * @param amount   The amount of time to wait.
+   * @param timeUnit The time unit.
    * @return a boolean value indicating resource is ready or not.
    */
   public static boolean waitUntilReady(Future<?> future, long amount, TimeUnit timeUnit) {
@@ -162,24 +164,37 @@ public class Utils {
         t = e.getCause();
       }
       t.addSuppressed(new Throwable("waiting here"));
-      throw KubernetesClientException.launderThrowable(t);      
+      throw KubernetesClientException.launderThrowable(t);
     } catch (Exception e) {
       throw KubernetesClientException.launderThrowable(e);
     }
   }
-  
+
   /**
    * Similar to {@link #waitUntilReady(Future, long, TimeUnit)}, but will always throw an exception if not ready
    */
-  public static void waitUntilReadyOrFail(Future<?> future, long amount, TimeUnit timeUnit) {
-    if (!waitUntilReady(future, amount, timeUnit)) {
-      throw new KubernetesClientException("not ready after " + amount + " " + timeUnit);
+  public static void waitUntilReadyOrFail(Future<?> future, long amount, TimeUnit timeUnit, int requestRetryCount) {
+    boolean completed;
+    int counter = 0;
+
+    do {
+      if (counter > 1) {
+        LOGGER.info("Kubernetes API interaction, try #{}", counter + 1);
+      }
+
+      completed = waitUntilReady(future, amount, timeUnit);
+      counter++;
+    } while (!completed && counter < requestRetryCount);
+
+    if (!completed) {
+      throw new KubernetesClientException("not ready after " + amount + " " + timeUnit + "and " + requestRetryCount + "retr" + (requestRetryCount != 1 ? "ies" : "y"));
     }
   }
 
   /**
    * Closes and flushes the specified {@link Closeable} items.
-   * @param closeables  An {@link Iterable} of {@link Closeable} items.
+   *
+   * @param closeables An {@link Iterable} of {@link Closeable} items.
    */
   public static void closeQuietly(Iterable<Closeable> closeables) {
     for (Closeable c : closeables) {
@@ -200,7 +215,8 @@ public class Utils {
 
   /**
    * Closes and flushes the specified {@link Closeable} items.
-   * @param closeables  An array of {@link Closeable} items.
+   *
+   * @param closeables An array of {@link Closeable} items.
    */
   public static void closeQuietly(Closeable... closeables) {
     closeQuietly(Arrays.asList(closeables));
@@ -323,7 +339,6 @@ public class Utils {
   }
 
   /**
-   *
    * @param kind
    * @return
    * @deprecated use {@link io.fabric8.kubernetes.api.model.HasMetadata#getPlural(Class)}
@@ -365,10 +380,10 @@ public class Utils {
    * when this notation is used, the resulting value will be unquoted (if applicable), expected values should be JSON
    * compatible.
    *
-   * @see <a href="https://docs.openshift.com/container-platform/4.3/openshift_images/using-templates.html#templates-writing-parameters_using-templates">OpenShift Templates</a>
-   * @param valuesMap to interpolate in the String
+   * @param valuesMap     to interpolate in the String
    * @param templateInput raw input containing a String with placeholders ready to be interpolated
    * @return the interpolated String
+   * @see <a href="https://docs.openshift.com/container-platform/4.3/openshift_images/using-templates.html#templates-writing-parameters_using-templates">OpenShift Templates</a>
    */
   public static String interpolateString(String templateInput, Map<String, String> valuesMap) {
     return Optional.ofNullable(valuesMap).orElse(Collections.emptyMap()).entrySet().stream()
@@ -427,7 +442,7 @@ public class Utils {
   private static String getOperatingSystemFromSystemProperty() {
     return System.getProperty(OS_NAME);
   }
-  
+
   /**
    * Create a {@link ThreadFactory} with daemon threads and a thread
    * name based upon the object passed in.
@@ -440,17 +455,17 @@ public class Utils {
   static ThreadFactory daemonThreadFactory(String name) {
     return new ThreadFactory() {
       ThreadFactory threadFactory = Executors.defaultThreadFactory();
-      
+
       @Override
       public Thread newThread(Runnable r) {
-        Thread ret = threadFactory.newThread(r); 
+        Thread ret = threadFactory.newThread(r);
         ret.setName(name + "-" + ret.getName());
         ret.setDaemon(true);
         return ret;
       }
     };
   }
-  
+
   /**
    * Schedule a task to run in the given {@link Executor} - which should run the task in a different thread as to not
    * hold the scheduling thread
@@ -467,12 +482,12 @@ public class Utils {
     // because of the hand-off to the other executor, there's no difference between rate and delay
     return SHARED_SCHEDULER.scheduleWithFixedDelay(() -> executor.execute(command), initialDelay, delay, unit);
   }
-  
+
   /**
    * Get the common executor service - callers should not shutdown this service
    */
   public static ExecutorService getCommonExecutorSerive() {
     return SHARED_POOL;
   }
-    
+
 }

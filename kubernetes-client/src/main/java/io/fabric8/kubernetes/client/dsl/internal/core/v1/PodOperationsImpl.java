@@ -319,7 +319,7 @@ public class PodOperationsImpl extends HasMetadataOperation<Pod, PodList, PodRes
                 execWebSocketListener.onError(w, t);
               }
             });
-            Utils.waitUntilReadyOrFail(startedFuture, config.getWebsocketTimeout(), TimeUnit.MILLISECONDS);
+            Utils.waitUntilReadyOrFail(startedFuture, config.getWebsocketTimeout(), TimeUnit.MILLISECONDS, config.getRequestRetryCount());
             return execWebSocketListener;
         } catch (Throwable t) {
             throw KubernetesClientException.launderThrowable(forOperationType("exec"), t);

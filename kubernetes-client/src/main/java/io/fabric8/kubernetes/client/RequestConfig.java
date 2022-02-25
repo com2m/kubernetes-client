@@ -28,6 +28,7 @@ import static io.fabric8.kubernetes.client.Config.DEFAULT_MAX_CONCURRENT_REQUEST
 import static io.fabric8.kubernetes.client.Config.DEFAULT_MAX_CONCURRENT_REQUESTS_PER_HOST;
 import static io.fabric8.kubernetes.client.Config.DEFAULT_REQUEST_RETRY_BACKOFFLIMIT;
 import static io.fabric8.kubernetes.client.Config.DEFAULT_REQUEST_RETRY_BACKOFFINTERVAL;
+import static io.fabric8.kubernetes.client.Config.DEFAULT_REQUEST_RETRY_COUNT;
 import static io.fabric8.kubernetes.client.Config.DEFAULT_ROLLING_TIMEOUT;
 import static io.fabric8.kubernetes.client.Config.DEFAULT_SCALE_TIMEOUT;
 import static io.fabric8.kubernetes.client.Config.DEFAULT_UPLOAD_CONNECTION_TIMEOUT;
@@ -53,6 +54,7 @@ public class RequestConfig {
   private int uploadRequestTimeout = DEFAULT_UPLOAD_REQUEST_TIMEOUT;
   private int requestRetryBackoffLimit = DEFAULT_REQUEST_RETRY_BACKOFFLIMIT;
   private int requestRetryBackoffInterval = DEFAULT_REQUEST_RETRY_BACKOFFINTERVAL;
+  private int requestRetryCount = DEFAULT_REQUEST_RETRY_COUNT;
   private int requestTimeout = 10 * 1000;
   private long rollingTimeout = DEFAULT_ROLLING_TIMEOUT;
   private long scaleTimeout = DEFAULT_SCALE_TIMEOUT;
@@ -89,7 +91,7 @@ public class RequestConfig {
                        long websocketTimeout, long websocketPingInterval,
                        int maxConcurrentRequests, int maxConcurrentRequestsPerHost) {
     this(username, password, oauthToken, watchReconnectLimit, watchReconnectInterval, connectionTimeout, rollingTimeout, requestTimeout, scaleTimeout, loggingInterval,
-         websocketTimeout,  websocketPingInterval,maxConcurrentRequests, maxConcurrentRequestsPerHost, null, DEFAULT_REQUEST_RETRY_BACKOFFLIMIT, DEFAULT_REQUEST_RETRY_BACKOFFINTERVAL,
+         websocketTimeout,  websocketPingInterval,maxConcurrentRequests, maxConcurrentRequestsPerHost, null, DEFAULT_REQUEST_RETRY_BACKOFFLIMIT, DEFAULT_REQUEST_RETRY_BACKOFFINTERVAL, DEFAULT_REQUEST_RETRY_COUNT,
          DEFAULT_UPLOAD_CONNECTION_TIMEOUT, DEFAULT_UPLOAD_REQUEST_TIMEOUT);
   }
 
@@ -99,7 +101,7 @@ public class RequestConfig {
                        int connectionTimeout, long rollingTimeout, int requestTimeout, long scaleTimeout, int loggingInterval,
                        long websocketTimeout, long websocketPingInterval,
                        int maxConcurrentRequests, int maxConcurrentRequestsPerHost, OAuthTokenProvider oauthTokenProvider,
-                       int requestRetryBackoffLimit, int requestRetryBackoffInterval, int uploadConnectionTimeout, int uploadRequestTimeout) {
+                       int requestRetryBackoffLimit, int requestRetryBackoffInterval, int requestRetryCount, int uploadConnectionTimeout, int uploadRequestTimeout) {
     this.username = username;
     this.oauthToken = oauthToken;
     this.password = password;
@@ -117,6 +119,7 @@ public class RequestConfig {
     this.oauthTokenProvider = oauthTokenProvider;
     this.requestRetryBackoffLimit = requestRetryBackoffLimit;
     this.requestRetryBackoffInterval = requestRetryBackoffInterval;
+    this.requestRetryCount = requestRetryCount;
     this.uploadConnectionTimeout = uploadConnectionTimeout;
     this.uploadRequestTimeout = uploadRequestTimeout;
   }
@@ -194,6 +197,14 @@ public class RequestConfig {
 
   public void setRequestRetryBackoffInterval(int requestRetryBackoffInterval) {
     this.requestRetryBackoffInterval = requestRetryBackoffInterval;
+  }
+
+  public int getRequestRetryCount() {
+    return requestRetryCount;
+  }
+
+  public void setRequestRetryCount(int requestRetryCount) {
+    this.requestRetryCount = requestRetryCount;
   }
 
   public int getConnectionTimeout() {
